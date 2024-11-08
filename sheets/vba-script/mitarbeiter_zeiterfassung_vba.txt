@@ -1,0 +1,68 @@
+
+Sub BerechneGesamtstunden()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("Arbeitszeiterfassung")
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    Dim i As Long
+    For i = 7 To lastRow ' Startzeile ist 7
+        Dim startZeit As Date
+        Dim endZeit As Date
+        Dim pause As Double
+        Dim gesamtStunden As Double
+        
+        startZeit = ws.Cells(i, 2).Value
+        endZeit = ws.Cells(i, 3).Value
+        pause = ws.Cells(i, 4).Value / 1440 ' Umrechnung von Minuten in Tage
+        
+        If Not IsEmpty(startZeit) And Not IsEmpty(endZeit) Then
+            gesamtStunden = (endZeit - startZeit - pause) * 24
+            gesamtStunden = Application.RoundUp(gesamtStunden * 4, 0) / 4 ' Runden auf 15 Minuten
+            ws.Cells(i, 5).Value = gesamtStunden
+        End If
+    Next i
+End Sub
+
+Sub ValidiereDaten()
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets("Arbeitszeiterfassung")
+    
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    Dim i As Long
+    For i = 7 To lastRow ' Startzeile ist 7
+        Dim startZeit As Date
+        Dim endZeit As Date
+        Dim pause As Double
+        Dim gesamtStunden As Double
+        
+        startZeit = ws.Cells(i, 2).Value
+        endZeit = ws.Cells(i, 3).Value
+        pause = ws.Cells(i, 4).Value
+        gesamtStunden = ws.Cells(i, 5).Value
+        
+        ' Überprüfe, ob Endzeit nach Startzeit liegt
+        If Not IsEmpty(startZeit) And Not IsEmpty(endZeit) Then
+            If endZeit <= startZeit Then
+                MsgBox "Fehler in Zeile " & i & ": Endzeit muss nach Startzeit liegen."
+            End If
+        End If
+        
+        ' Überprüfe, ob Pause nicht länger als Arbeitszeit ist
+        If Not IsEmpty(gesamtStunden) And Not IsEmpty(pause) Then
+            If pause > gesamtStunden * 60 Then
+                MsgBox "Warnung in Zeile " & i & ": Pause ist länger als Arbeitszeit."
+            End If
+        End If
+        
+        ' Überprüfe, ob Gesamtstunden nicht mehr als 12 Stunden betragen
+        If gesamtStunden > 12 Then
+            MsgBox "Warnung in Zeile " & i & ": Arbeitszeit überschreitet 12 Stunden."
+        End If
+    Next i
+    
+    MsgBox "Datenvalidierung abgeschlossen."
+End Sub
